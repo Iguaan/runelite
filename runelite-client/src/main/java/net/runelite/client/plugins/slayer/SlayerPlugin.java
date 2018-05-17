@@ -319,6 +319,12 @@ public class SlayerPlugin extends Plugin
 			amount++;
 			slaughterChargeCount = --slaughterChargeCount <= 0 ? SLAUGHTER_CHARGE : slaughterChargeCount;
 			config.slaughter(slaughterChargeCount);
+			if (!config.showInfobox())
+			{
+				return;
+			}
+			addCounter();
+			counter.setText(String.valueOf(amount));
 		}
 
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS))
@@ -326,6 +332,12 @@ public class SlayerPlugin extends Plugin
 			amount--;
 			expeditiousChargeCount = --expeditiousChargeCount <= 0 ? EXPEDITIOUS_CHARGE : expeditiousChargeCount;
 			config.expeditious(expeditiousChargeCount);
+			if (!config.showInfobox())
+			{
+				return;
+			}
+			addCounter();
+			counter.setText(String.valueOf(amount));
 		}
 
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS_CHARGE))
