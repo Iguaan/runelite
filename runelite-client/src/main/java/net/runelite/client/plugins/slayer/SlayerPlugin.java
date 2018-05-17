@@ -45,19 +45,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.ItemID;
-import net.runelite.api.NPC;
-import net.runelite.api.NPCComposition;
-import net.runelite.api.Query;
+import net.runelite.api.*;
+
 import static net.runelite.api.Skill.SLAYER;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.ConfigChanged;
-import net.runelite.api.events.ExperienceChanged;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
+
+import net.runelite.api.events.*;
 import net.runelite.api.queries.EquipmentItemQuery;
 import net.runelite.api.queries.InventoryWidgetItemQuery;
 import net.runelite.api.widgets.Widget;
@@ -65,6 +57,10 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.chat.ChatColorType;
+import net.runelite.client.chat.ChatMessageBuilder;
+import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
@@ -145,6 +141,7 @@ public class SlayerPlugin extends Plugin
 	private int cachedXp;
 	private Instant infoTimer;
 	private boolean loginFlag;
+	private int skipTick;
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
 	private int expeditiousChargeCount;
@@ -215,6 +212,48 @@ public class SlayerPlugin extends Plugin
 		config.streak(streak);
 		config.expeditious(expeditiousChargeCount);
 		config.slaughter(slaughterChargeCount);
+	}
+
+	@Subscribe
+	public void onActorDeath(ActorDeath death)
+	{
+		Actor actor = death.getActor();
+		Actor localPlayer = (Actor) client.getLocalPlayer();
+		List<Player> players = client.getPlayers();
+
+		// is an NPC, is interacting with us, are we in multi, are they part of the task
+		if (actor instanceof NPC && actor.getInteracting() == localPlayer && client.getVar(Varbits.MULTICOMBAT_AREA) == 1 && buildTargetsToHighlight().contains(actor))
+		{
+			for (Player player : players)
+			{
+				if (player != localPlayer && player.getInteracting() == actor) // another player was not interacting
+				{
+					return;
+				}
+			}
+			killedOne();
+			skipTick = client.getTickCount() + 1; // prevent decreasing counter twice
+			sendChatMessage("actorDeath - 1");
+			/* REMOVE */
+		}
+	}
+
+	@Inject
+	private ChatMessageManager chatMessageManager;
+
+
+	private void sendChatMessage(String chatMessage)
+	{
+		final String message = new ChatMessageBuilder()
+				.append(ChatColorType.HIGHLIGHT)
+				.append(chatMessage)
+				.build();
+
+		chatMessageManager.queue(
+				QueuedMessage.builder()
+						.type(ChatMessageType.GAME)
+						.runeLiteFormattedMessage(message)
+						.build());
 	}
 
 	@Subscribe
@@ -290,6 +329,7 @@ public class SlayerPlugin extends Plugin
 		{
 			highlightedTargets.clear();
 		}
+		
 	}
 
 	private void checkInventories()
@@ -317,15 +357,21 @@ public class SlayerPlugin extends Plugin
 		if (chatMsg.startsWith(CHAT_BRACELET_SLAUGHTER))
 		{
 			amount++;
+			sendChatMessage("bracelet + 1");
+			/* REMOVE */
 			slaughterChargeCount = --slaughterChargeCount <= 0 ? SLAUGHTER_CHARGE : slaughterChargeCount;
 			config.slaughter(slaughterChargeCount);
+			counter.setText(String.valueOf(amount));
 		}
 
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS))
 		{
 			amount--;
+			sendChatMessage("bracelet - 1");
+			/* REMOVE */
 			expeditiousChargeCount = --expeditiousChargeCount <= 0 ? EXPEDITIOUS_CHARGE : expeditiousChargeCount;
 			config.expeditious(expeditiousChargeCount);
+			counter.setText(String.valueOf(amount));
 		}
 
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS_CHARGE))
@@ -345,6 +391,8 @@ public class SlayerPlugin extends Plugin
 
 		if (chatMsg.endsWith("; return to a Slayer master."))
 		{
+
+			sendChatMessage("Amount left: " + amount);/* REMOVE */
 			Matcher mComplete = CHAT_COMPLETE_MESSAGE.matcher(chatMsg);
 
 			List<String> matches = new ArrayList<>();
@@ -417,6 +465,12 @@ public class SlayerPlugin extends Plugin
 			return;
 		}
 
+		if (skipTick == client.getTickCount())
+		{
+			return;
+		}
+		sendChatMessage("expChanged - 1");
+		/* REMOVE */
 		killedOne();
 		cachedXp = slayerExp;
 	}
