@@ -141,7 +141,7 @@ public class SlayerPlugin extends Plugin
 	private int cachedXp;
 	private Instant infoTimer;
 	private boolean loginFlag;
-	private int skipTick;
+	private Integer skipTick = 0;
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
 	private int expeditiousChargeCount;
@@ -232,8 +232,8 @@ public class SlayerPlugin extends Plugin
 				}
 			}
 			killedOne();
-			skipTick = client.getTickCount() + 1; // prevent decreasing counter twice
-			sendChatMessage("actorDeath - 1");
+			skipTick = client.getTickCount(); // prevent decreasing counter twice
+			sendChatMessage("actorDeath - 1 on tick " + client.getTickCount());
 			/* REMOVE */
 		}
 	}
@@ -357,7 +357,7 @@ public class SlayerPlugin extends Plugin
 		if (chatMsg.startsWith(CHAT_BRACELET_SLAUGHTER))
 		{
 			amount++;
-			sendChatMessage("bracelet + 1");
+			sendChatMessage("bracelet + 1 on tick " + client.getTickCount());
 			/* REMOVE */
 			slaughterChargeCount = --slaughterChargeCount <= 0 ? SLAUGHTER_CHARGE : slaughterChargeCount;
 			config.slaughter(slaughterChargeCount);
@@ -367,7 +367,7 @@ public class SlayerPlugin extends Plugin
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS))
 		{
 			amount--;
-			sendChatMessage("bracelet - 1");
+			sendChatMessage("bracelet - 1 on tick " + client.getTickCount());
 			/* REMOVE */
 			expeditiousChargeCount = --expeditiousChargeCount <= 0 ? EXPEDITIOUS_CHARGE : expeditiousChargeCount;
 			config.expeditious(expeditiousChargeCount);
@@ -465,14 +465,17 @@ public class SlayerPlugin extends Plugin
 			return;
 		}
 
-		if (skipTick == client.getTickCount())
+		cachedXp = slayerExp;
+
+		// skip killedOne() being triggered from exp change event in case it was already triggered from onActorDeath on same tick or the one after that
+		if (client.getTickCount() == skipTick || client.getTickCount() == skipTick + 1)
 		{
+			sendChatMessage("expChanged on tick " + client.getTickCount());
 			return;
 		}
-		sendChatMessage("expChanged - 1");
+		sendChatMessage("expChanged - 1 on tick " + client.getTickCount());
 		/* REMOVE */
 		killedOne();
-		cachedXp = slayerExp;
 	}
 
 	@Subscribe
