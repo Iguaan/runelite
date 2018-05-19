@@ -222,11 +222,12 @@ public class SlayerPlugin extends Plugin
 		List<Player> players = client.getPlayers();
 
 		// is an NPC, is interacting with us, are we in multi, are they part of the task
-		if (actor instanceof NPC && actor.getInteracting() == localPlayer && client.getVar(Varbits.MULTICOMBAT_AREA) == 1 && buildTargetsToHighlight().contains(actor))
+		if (actor instanceof NPC && actor.getInteracting() == localPlayer && client.getVar(Varbits.MULTICOMBAT_AREA) == 1 && !buildTargetsToHighlight().isEmpty() && buildTargetsToHighlight().contains(actor))
 		{
 			for (Player player : players)
 			{
-				if (player != localPlayer && player.getInteracting() == actor) // another player was not interacting
+				// another player was interacting
+				if (player != localPlayer && player.getInteracting() == actor)
 				{
 					return;
 				}
