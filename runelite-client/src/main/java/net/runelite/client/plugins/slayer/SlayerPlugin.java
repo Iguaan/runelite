@@ -141,7 +141,7 @@ public class SlayerPlugin extends Plugin
 	private int cachedXp;
 	private Instant infoTimer;
 	private boolean loginFlag;
-	private Integer skipTick = 0;
+	private int skipTick = 0;
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
 	private int expeditiousChargeCount;
