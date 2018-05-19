@@ -232,10 +232,12 @@ public class SlayerPlugin extends Plugin
 					return;
 				}
 			}
+
 			killedOne();
-			skipTick = client.getTickCount(); // prevent decreasing counter twice
+			// prevent decreasing counter twice
+			skipTick = client.getTickCount();
+			// REMOVE \\
 			sendChatMessage("actorDeath - 1 on tick " + client.getTickCount());
-			/* REMOVE */
 		}
 	}
 
@@ -330,7 +332,6 @@ public class SlayerPlugin extends Plugin
 		{
 			highlightedTargets.clear();
 		}
-		
 	}
 
 	private void checkInventories()
@@ -358,21 +359,19 @@ public class SlayerPlugin extends Plugin
 		if (chatMsg.startsWith(CHAT_BRACELET_SLAUGHTER))
 		{
 			amount++;
+			// REMOVE \\
 			sendChatMessage("bracelet + 1 on tick " + client.getTickCount());
-			/* REMOVE */
 			slaughterChargeCount = --slaughterChargeCount <= 0 ? SLAUGHTER_CHARGE : slaughterChargeCount;
 			config.slaughter(slaughterChargeCount);
-			counter.setText(String.valueOf(amount));
 		}
 
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS))
 		{
 			amount--;
+			// REMOVE \\
 			sendChatMessage("bracelet - 1 on tick " + client.getTickCount());
-			/* REMOVE */
 			expeditiousChargeCount = --expeditiousChargeCount <= 0 ? EXPEDITIOUS_CHARGE : expeditiousChargeCount;
 			config.expeditious(expeditiousChargeCount);
-			counter.setText(String.valueOf(amount));
 		}
 
 		if (chatMsg.startsWith(CHAT_BRACELET_EXPEDITIOUS_CHARGE))
@@ -392,8 +391,8 @@ public class SlayerPlugin extends Plugin
 
 		if (chatMsg.endsWith("; return to a Slayer master."))
 		{
-
-			sendChatMessage("Amount left: " + amount);/* REMOVE */
+			// REMOVE \\
+			sendChatMessage("Amount left: " + amount);
 			Matcher mComplete = CHAT_COMPLETE_MESSAGE.matcher(chatMsg);
 
 			List<String> matches = new ArrayList<>();
@@ -471,11 +470,13 @@ public class SlayerPlugin extends Plugin
 		// skip killedOne() being triggered from exp change event in case it was already triggered from onActorDeath on same tick or the one after that
 		if (client.getTickCount() == skipTick || client.getTickCount() == skipTick + 1)
 		{
+			// REMOVE \\
 			sendChatMessage("expChanged on tick " + client.getTickCount());
 			return;
 		}
+
+		// REMOVE \\
 		sendChatMessage("expChanged - 1 on tick " + client.getTickCount());
-		/* REMOVE */
 		killedOne();
 	}
 
